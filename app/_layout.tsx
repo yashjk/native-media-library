@@ -25,7 +25,7 @@ export default function RootLayout() {
 
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
-			<Drawer>
+			<Drawer initialRouteName="(todo)">
 				<Drawer.Screen
 					name="(todo)"
 					options={{

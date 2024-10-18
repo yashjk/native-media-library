@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import {
 	Camera,
 	useCameraDevice,
@@ -19,13 +19,19 @@ export default function CameraModal({
 	const [cameraType, setCameraType] = useState<"front" | "back">("front");
 	const device = useCameraDevice(cameraType);
 	const camera = useRef<Camera>(null);
-	const { hasPermission } = useCameraPermission();
+	const { hasPermission, requestPermission } = useCameraPermission();
 
-	if (!hasPermission) {
-		alert("Sorry, we need camera permissions to make this work!");
-		return;
-	}
-
+	useEffect(() => {
+		if (!hasPermission) {
+			requestPermission().then((status) => {
+				console.log({ status });
+				if (!status) {
+					setIsCapturing(false);
+				}
+			});
+		}
+	}, [hasPermission]);
+	console.log({ hasPermission });
 	const capturePhoto = async () => {
 		if (camera.current !== null) {
 			const rawImage = await camera.current.takePhoto({});
@@ -35,44 +41,45 @@ export default function CameraModal({
 	};
 
 	return (
-		<View style={styles.cameraContainer}>
-			<Camera
-				ref={camera}
-				style={StyleSheet.absoluteFill}
-				isMirrored={false}
-				outputOrientation="preview"
-				device={device!}
-				photo={true}
-				isActive={true}
-				onError={() => {
-					console.log("Camera Error");
-
-					onCameraError();
-				}}
-			/>
-
-			<TouchableOpacity
-				style={styles.camBack}
-				onPress={() => setIsCapturing(false)}
-			>
-				<Ionicons name="arrow-back" size={30} color="white" />
-			</TouchableOpacity>
-
-			<View style={styles.buttonContainer}>
-				<TouchableOpacity
-					style={styles.cameraFlip}
-					onPress={() =>
-						setCameraType(cameraType === "front" ? "back" : "front")
-					}
-				>
-					<Ionicons name="camera-reverse" size={40} color="white" />
-				</TouchableOpacity>
-				<TouchableOpacity
-					style={styles.camButton}
-					onPress={() => capturePhoto()}
+		<Modal
+			transparent
+			visible={hasPermission}
+			onRequestClose={() => setIsCapturing(false)}
+		>
+			<View style={styles.cameraContainer}>
+				<Camera
+					ref={camera}
+					style={StyleSheet.absoluteFill}
+					isMirrored={false}
+					outputOrientation="preview"
+					device={device!}
+					photo={true}
+					isActive={true}
 				/>
+
+				<TouchableOpacity
+					style={styles.camBack}
+					onPress={() => setIsCapturing(false)}
+				>
+					<Ionicons name="arrow-back" size={30} color="white" />
+				</TouchableOpacity>
+
+				<View style={styles.buttonContainer}>
+					<TouchableOpacity
+						style={styles.cameraFlip}
+						onPress={() =>
+							setCameraType(cameraType === "front" ? "back" : "front")
+						}
+					>
+						<Ionicons name="camera-reverse" size={40} color="white" />
+					</TouchableOpacity>
+					<TouchableOpacity
+						style={styles.camButton}
+						onPress={() => capturePhoto()}
+					/>
+				</View>
 			</View>
-		</View>
+		</Modal>
 	);
 }
 

@@ -14,8 +14,6 @@ export default function Gallery() {
 	const { handleImageAddition } = useMediaLibraryContext();
 	const device = useCameraDevice("back");
 
-	console.log({ device });
-
 	const handleGalleryPress = async () => {
 		const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -48,27 +46,29 @@ export default function Gallery() {
 		setIsCapturing(false);
 	}, []);
 
-	if (isCapturing && !device) {
-		return (
-			<CameraModal
-				setIsCapturing={setIsCapturing}
-				handleImageAddition={handleImageAddition}
-				onCameraError={onCameraError}
-			/>
-		);
-	}
+	console.log({ isCapturing });
 
 	return (
-		<BottomSheetModalProvider>
-			<Container>
-				<DisplayImages />
+		<>
+			<BottomSheetModalProvider>
+				<Container>
+					<DisplayImages />
 
-				<PhotoUploadDropdown
-					handleCameraPress={handleCameraPress}
-					handleGalleryPress={handleGalleryPress}
-					cameraDevice={Boolean(device)}
+					<PhotoUploadDropdown
+						handleCameraPress={handleCameraPress}
+						handleGalleryPress={handleGalleryPress}
+						cameraDevice={Boolean(device)}
+					/>
+				</Container>
+			</BottomSheetModalProvider>
+
+			{isCapturing && device && (
+				<CameraModal
+					setIsCapturing={setIsCapturing}
+					handleImageAddition={handleImageAddition}
+					onCameraError={onCameraError}
 				/>
-			</Container>
-		</BottomSheetModalProvider>
+			)}
+		</>
 	);
 }
